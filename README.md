@@ -1,8 +1,11 @@
 # arbeitszeit
 
-This script assumes you have [ammonite](https://ammonite.io/) as well as [pdftk](https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/) installed.
+This is a small [ammonite](https://ammonite.io/) script which can be used to fill in arbeitszeit sheets from TU Darmstadt.
 
-Usage: `amm arbeitszeit.sc --form arbeitszeit2019.pdf --name "Kim Mustermann" --birthday "01.01.1989" --institution "Evil Corp." --month 1 --year 2000 --hours 60`
+## Usage
+To run this script you need to have [ammonite](https://ammonite.io/) as well as [pdftk](https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/) installed.
+
+`amm arbeitszeit.sc --form arbeitszeit2019.pdf --name "Kim Mustermann" --birthday "01.01.1989" --institution "Evil Corp." --month 1 --year 2000 --hours 60`
 
 
 <!-- ---
