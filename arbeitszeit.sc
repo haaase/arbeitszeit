@@ -10,7 +10,7 @@ import scala.annotation.tailrec
 import scala.io.Source
 import scala.util.matching.Regex
 import $ivy.`com.github.scopt::scopt:4.0.0`, scopt.OptionParser
-import $file.gen_data, gen_data.{ Entry, genEntries }
+import $file.gen_data, gen_data.{ Entry, genEntries, getHolidays }
 import $file.populate_pdf, populate_pdf.populatePdf
 
 // scopt config
@@ -21,10 +21,15 @@ case class Config(
   name: String = "Kim Mustermann",
   institution: String = "TU Darmstadt",
   birthday: String = "01.01.2000",
-  pdfForm: String = "arbeitszeit2019.pdf")
+  pdfForm: String = "",
+  useHolidays: Boolean = true)
 
 val configParser = new scopt.OptionParser[Config]("arbeitszeit") {
-  head("arbeitszeit", "0.8")
+  head("arbeitszeit", "1.0")
+
+  note("arbeitszeit is an ammonite script used to fill in arbeitszeit forms from TU Darmstadt.")
+
+  help("help")
 
   opt[Int]('m', "month")
     .action((x, c) => c.copy(month = x))
@@ -46,8 +51,12 @@ val configParser = new scopt.OptionParser[Config]("arbeitszeit") {
     .action((x, c) => c.copy(birthday = x))
 
   opt[String]('f', "form")
+    .required()
     .action((x, c) => c.copy(pdfForm = x))
-    .text("the arbeitszeit pdf form")
+    .text("path to the pdf form to be filled in")
+
+  opt[Unit]("no-holidays").action((x, c) => c.copy(useHolidays = false))
+    .text("This flags disables automatic holiday checking during entry generation.")
 }
 
 // convenience
@@ -82,7 +91,12 @@ def main(args: String*) = {
   configParser.parse(args, Config()) match {
     case Some(config) => {
       // generate entries
-      val entries = genEntries(month = config.month, year = config.year, hoursPerMonth = config.hoursPerMonth, holidays = Set())
+      val holidays: Set[LocalDate] = {
+        if (config.useHolidays) getHolidays()
+        else Set()
+      }
+
+      val entries = genEntries(month = config.month, year = config.year, hoursPerMonth = config.hoursPerMonth, holidays = holidays)
 
       // create individual pdf document for every 10 entries
       mkdir ! pwd / 'tmp // create tmp dir
