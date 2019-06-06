@@ -77,7 +77,7 @@ def genEntries(hoursPerMonth: Int = 36, minHoursInRow: Int = 3, maxHoursInRow: I
         println(s"Generated Entry: ${entry}")
 
         // validate entry to check that it does not overlap and that break times hold
-        if (entries.exists(e => entry.distance(e) < minBreakTime)) {
+        if (entries.exists(e => entry.distance(e) < minBreakTime || entry.date == e.date)) {
           val problem = entries.find(e => entry.distance(e) < minBreakTime)
           println(s"Trying again because of conflict with $problem!")
           gen(remaining, entries) //try again
