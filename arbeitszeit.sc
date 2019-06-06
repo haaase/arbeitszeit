@@ -3,7 +3,7 @@
 // https://joewiz.org/2014/02/13/filling-pdf-forms-with-pdftk-xfdf-and-xquery/
 import ammonite.ops._
 import ammonite.ops.ImplicitWd._
-import java.time.{ LocalDate, LocalTime }
+import java.time.{ LocalDate, LocalTime, Duration }
 import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 import scala.annotation.tailrec
@@ -52,16 +52,26 @@ val configParser = new scopt.OptionParser[Config]("arbeitszeit") {
 
 // convenience
 val pdfFile: Regex = "(.*)\\.pdf".r
+val datePattern = "dd.MM.yyyy";
+val dateFormatter = DateTimeFormatter.ofPattern(datePattern);
 
+val timePattern = "HH:mm";
+val timeFormatter = DateTimeFormatter.ofPattern(timePattern);
+
+// takes 10 entries and inserts them into the pdf form
 def processEntryGroup(group: List[Entry]): Map[String, String] = {
   var i = 1
   var m: Map[String, String] = Map()
   for (entry <- group) {
     m = m ++ Map(
-      s"DatumRow${i}" -> entry.date.toString,
-      s"Arbeitszeit Beginn  EndeRow${i}" -> entry.start.toString,
-      s"Arbeitszeit Beginn  EndeRow${i}_2" -> entry.end.toString,
-      s"t&#228;gl gesamt Stunden Arbeits zeit abz&#252;glich der PausenRow${i}" -> (ChronoUnit.MINUTES.between(entry.start, entry.end).toDouble / 60).toString)
+      s"DatumRow${i}" -> dateFormatter.format(entry.date),
+      s"Arbeitszeit Beginn  EndeRow${i}" -> timeFormatter.format(entry.start),
+      s"Arbeitszeit Beginn  EndeRow${i}_2" -> timeFormatter.format(entry.end),
+      s"t&#228;gl gesamt Stunden Arbeits zeit abz&#252;glich der PausenRow${i}" -> {
+        val d = Duration.between(entry.start, entry.end)
+        if (d.toMinutesPart > 0) s"${d.toHours},${d.toMinutesPart}"
+        else s"${d.toHours}"
+      })
     i += 1
   }
   m
