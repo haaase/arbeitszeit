@@ -84,15 +84,12 @@ def main(args: String*) = {
       // generate entries
       val entries = genEntries(month = config.month, year = config.year, hoursPerMonth = config.hoursPerMonth, holidays = Set())
 
-      println(s"ENTRIES: $entries, LENGTH: ${entries.length}")
-
       // create individual pdf document for every 10 entries
       mkdir ! pwd / 'tmp // create tmp dir
       val pdfFile(basename) = config.pdfForm // get input filename without extension
       var i = 0
       val numberOfGroups = entries.grouped(10).length
       for (group <- entries.grouped(10)) {
-        println(s"GROUP: $group")
         val fields = Map(
           "EinrichtungInstitut" -> config.institution,
           "Name Vorname 1" -> config.name,
