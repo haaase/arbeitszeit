@@ -9,31 +9,49 @@ import java.time.format.DateTimeFormatter
 import scala.annotation.tailrec
 import scala.io.Source
 import scala.util.matching.Regex
+import $ivy.`com.github.scopt::scopt:4.0.0`, scopt.OptionParser
 import $file.gen_data, gen_data.{ Entry, genEntries }
 import $file.populate_pdf, populate_pdf.populatePdf
 
+// scopt config
+case class Config(
+  month: Int = 1,
+  year: Int = 2019,
+  hoursPerMonth: Int = 36,
+  name: String = "Kim Mustermann",
+  institution: String = "TU Darmstadt",
+  birthday: String = "01.01.2000",
+  pdfForm: String = "arbeitszeit2019.pdf")
+
+val configParser = new scopt.OptionParser[Config]("arbeitszeit") {
+  head("arbeitszeit", "0.8")
+
+  opt[Int]('m', "month")
+    .action((x, c) => c.copy(month = x))
+
+  opt[Int]('y', "year")
+    .action((x, c) => c.copy(year = x))
+
+  opt[Int]('h', "hours")
+    .action((x, c) => c.copy(hoursPerMonth = x))
+    .text("working hours per month")
+
+  opt[String]('n', "name")
+    .action((x, c) => c.copy(name = x))
+
+  opt[String]('i', "institution")
+    .action((x, c) => c.copy(institution = x))
+
+  opt[String]('b', "birthday")
+    .action((x, c) => c.copy(birthday = x))
+
+  opt[String]('f', "form")
+    .action((x, c) => c.copy(pdfForm = x))
+    .text("the arbeitszeit pdf form")
+}
+
 // convenience
 val pdfFile: Regex = "(.*)\\.pdf".r
-case class Credentials(institution: String, name: String, birthday: String)
-
-// read input data
-// Example line: "FB 20 – Informatik;Max Mustermann;14;2;2019;14:00;16:00"
-// def parseInput(inputName: String): List[Entry] = {
-//   val entryLine: Regex = "(\\d?\\d);(\\d?\\d);(\\d\\d\\d\\d);(\\d?\\d):(\\d\\d);(\\d?\\d):(\\d\\d)".r
-// 
-//   @tailrec
-//   def parse(credentials: Credentials, entries: List[Entry], input: List[String]): (Credentials, List[Entry]) = {
-//     input match {
-//       case entryLine(day, month, year, startHour, startMinute, endHour, endMinute) :: xs => {
-//         val newEntry = Entry(LocalDate.of(year.toInt, month.toInt, day.toInt), LocalTime.of(startHour.toInt, startMinute.toInt), LocalTime.of(endHour.toInt, endMinute.toInt))
-//         println(newEntry)
-//         parse(credentials, entries :+ newEntry, xs)
-//       }
-//       case Nil => (credentials, entries)
-//     }
-//   }
-//   parse(Credentials("", "", ""), List(), Source.fromFile(inputName).getLines.toList)
-// }
 
 def processEntryGroup(group: List[Entry]): Map[String, String] = {
   var i = 1
@@ -50,27 +68,45 @@ def processEntryGroup(group: List[Entry]): Map[String, String] = {
 }
 
 @main
-def main(pdfForm: String) = {
-  val credentials = Credentials("TU Darmstadt", "Kim Mustermensch", "01.01.2000")
-  // val (credentials, entries) = parseInput(data)
-  val entries = genEntries(month = 5, year = 2019)
-  val pdfFile(basename) = pdfForm // get input filename without extension
+def main(args: String*) = {
+  configParser.parse(args, Config()) match {
+    case Some(config) => {
+      // generate entries
+      val entries = genEntries(month = config.month, year = config.year, hoursPerMonth = config.hoursPerMonth, holidays = Set())
 
-  mkdir ! pwd / 'tmp // create tmp dir
+      println(s"ENTRIES: $entries, LENGTH: ${entries.length}")
 
-  var i = 0
-  for (group <- entries.grouped(10)) {
-    val fields = Map(
-      "EinrichtungInstitut" -> credentials.institution,
-      "Name Vorname 1" -> credentials.name,
-      "Name Vorname 2" -> credentials.birthday) ++ processEntryGroup(group)
-    populatePdf(pdfForm, s"tmp/${basename}_populated${i}.pdf", fields)
-    i += 1
+      // create individual pdf document for every 10 entries
+      mkdir ! pwd / 'tmp // create tmp dir
+      val pdfFile(basename) = config.pdfForm // get input filename without extension
+      var i = 0
+      val numberOfGroups = entries.grouped(10).length
+      for (group <- entries.grouped(10)) {
+        println(s"GROUP: $group")
+        val fields = Map(
+          "EinrichtungInstitut" -> config.institution,
+          "Name Vorname 1" -> config.name,
+          "Name Vorname 2" -> config.birthday,
+          "Aufzeichnung f&#252;r den Zeitraum vom" -> {
+            // check if this is the first document
+            if (i == 0) dateFormatter.format(entries(0).date.withDayOfMonth(1))
+            else dateFormatter.format(group.head.date)
+          },
+          "bis" -> {
+            // check if this is the last document
+            if (i == numberOfGroups - 1) dateFormatter.format(entries(0).date.withDayOfMonth(entries(0).date.lengthOfMonth))
+            else dateFormatter.format(group.last.date)
+          }) ++ processEntryGroup(group)
+        populatePdf(config.pdfForm, s"tmp/${basename}_populated${i}.pdf", fields)
+        i += 1
+      }
+
+      // merge pdfs
+      val pdfs = (ls ! pwd / 'tmp).map(_.toString)
+      val cmd = List("pdftk") ++ pdfs ++ List("cat", "output", s"${basename}_populated.pdf")
+      %(cmd)
+      rm ! pwd / 'tmp
+    }
+    case None =>
   }
-
-  // merge pdfs
-  val pdfs = (ls ! pwd / 'tmp).map(_.toString)
-  val cmd = List("pdftk") ++ pdfs ++ List("cat", "output", s"${basename}_populated.pdf")
-  %(cmd)
-  rm ! pwd / 'tmp
-}}
+}
