@@ -18,6 +18,8 @@ case class Config(
   month: Int = 1,
   year: Int = 2019,
   hoursPerMonth: Int = 36,
+  minHoursInRow: Int = 3,
+  maxHoursInRow: Int = 4,
   name: String = "Kim Mustermann",
   institution: String = "TU Darmstadt",
   birthday: String = "01.01.2000",
@@ -40,6 +42,14 @@ val configParser = new scopt.OptionParser[Config]("arbeitszeit") {
   opt[Int]('h', "hours")
     .action((x, c) => c.copy(hoursPerMonth = x))
     .text("working hours per month")
+
+  opt[Int]("min-hours")
+    .action((x, c) => c.copy(minHoursInRow = x))
+    .text("minimum working hours in a row")
+
+  opt[Int]("max-hours")
+    .action((x, c) => c.copy(maxHoursInRow = x))
+    .text("maximum working hours in a row")
 
   opt[String]('n', "name")
     .action((x, c) => c.copy(name = x))
@@ -92,16 +102,17 @@ def main(args: String*) = {
     case Some(config) => {
       // generate entries
       val holidays: Set[LocalDate] = {
-        if (config.useHolidays) getHolidays()
+        if (config.useHolidays) getHolidays(config.year)
         else Set()
       }
 
-      val entries = genEntries(month = config.month, year = config.year, hoursPerMonth = config.hoursPerMonth, holidays = holidays)
+      val entries = genEntries(month = config.month, year = config.year, hoursPerMonth = config.hoursPerMonth, minHoursInRow = config.minHoursInRow, maxHoursInRow = config.maxHoursInRow, holidays = holidays)
 
       // create individual pdf document for every 10 entries
       mkdir ! pwd / 'tmp // create tmp dir
       val pdfFile(basename) = config.pdfForm // get input filename without extension
       var i = 0
+      var lastEntry = LocalDate.of(2000, 1, 1)
       val numberOfGroups = entries.grouped(10).length
       for (group <- entries.grouped(10)) {
         val fields = Map(
@@ -111,7 +122,7 @@ def main(args: String*) = {
           "Aufzeichnung f&#252;r den Zeitraum vom" -> {
             // check if this is the first document
             if (i == 0) dateFormatter.format(entries(0).date.withDayOfMonth(1))
-            else dateFormatter.format(group.head.date)
+            else dateFormatter.format(lastEntry)
           },
           "bis" -> {
             // check if this is the last document
@@ -119,12 +130,13 @@ def main(args: String*) = {
             else dateFormatter.format(group.last.date)
           }) ++ processEntryGroup(group)
         populatePdf(config.pdfForm, s"tmp/${basename}_populated${i}.pdf", fields)
+        lastEntry = group.last.date
         i += 1
       }
 
       // merge pdfs
       val pdfs = (ls ! pwd / 'tmp).map(_.toString)
-      val cmd = List("pdftk") ++ pdfs ++ List("cat", "output", s"${basename}_populated.pdf")
+      val cmd = List("pdftk") ++ pdfs ++ List("cat", "output", f"${config.year}-${config.month}%02d_${config.name.replace(" ", "_")}.pdf")
       %(cmd)
       rm ! pwd / 'tmp
     }

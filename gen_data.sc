@@ -29,7 +29,8 @@ case class Entry(date: LocalDate, start: LocalTime, end: LocalTime) {
 }
 
 // get holidays in Hessen using webservice
-def getHolidays(api: String = "https://feiertage-api.de/api/?jahr=2019&nur_land=HE"): Set[LocalDate] = {
+def getHolidays(year: Int = 2019): Set[LocalDate] = {
+  val api: String = s"https://feiertage-api.de/api/?jahr=${year}&nur_land=HE"
   // helper class
   case class Holiday(datum: String, hinweis: String) {
     // https://www.baeldung.com/java-datetimeformatter
@@ -51,7 +52,7 @@ def genDaysPerMonth(month: Int, year: Int): List[LocalDate] = {
   (1 to YearMonth.of(year, month).lengthOfMonth).toList.map(toDate(_))
 }
 
-def genEntries(hoursPerMonth: Int = 36, minHoursInRow: Int = 3, maxHoursInRow: Int = 4, minBreakTime: Int = 1, startTime: Int = 9, endTime: Int = 17, month: Int = YearMonth.now.getMonthValue, year: Int = Year.now.getValue, holidays: Set[LocalDate] = getHolidays()): List[Entry] = {
+def genEntries(hoursPerMonth: Int = 36, minHoursInRow: Int = 3, maxHoursInRow: Int = 4, minBreakTime: Int = 1, startTime: Int = 9, endTime: Int = 17, month: Int = YearMonth.now.getMonthValue, year: Int = Year.now.getValue, holidays: Set[LocalDate] = Set()): List[Entry] = {
   // gen days and filter out holidays and weekends
   val days = genDaysPerMonth(month, year).filter(
     day => !holidays.contains(day) && (day.getDayOfWeek != DayOfWeek.SATURDAY) && (day.getDayOfWeek != DayOfWeek.SUNDAY))
