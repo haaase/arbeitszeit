@@ -1,4 +1,4 @@
-#!/usr/bin/env/amm
+#!/usr/bin/env amm
 import ammonite.ops._
 import ammonite.ops.ImplicitWd._
 import $ivy.`io.circe::circe-generic:0.10.0`, io.circe.generic.auto._, io.circe.{ Decoder, Encoder }, io.circe.Json, io.circe.syntax._
