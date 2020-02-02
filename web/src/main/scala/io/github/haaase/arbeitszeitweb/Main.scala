@@ -11,8 +11,10 @@ import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.{HttpRoutes, _}
 import java.util.concurrent._
-import scala.util.Properties.envOrElse
 
+import io.github.haaase.arbeitszeit.cli._
+
+import scala.util.Properties.envOrElse
 import scala.concurrent.{ExecutionContext, Future, blocking}
 
 object Main extends IOApp {
@@ -50,7 +52,7 @@ object Main extends IOApp {
   object BirthdayParam extends OptionalQueryParamDecoderMatcher[String]("birthday")
 
   val ArbeitszeitService: HttpRoutes[IO] = HttpRoutes.of[IO] {
-    case request@GET -> Root / "getform" :? MonthParam(monthparam) +& YearParam(yearparam) +& HoursPerMonthParam(hpmparam) +& MinHoursInRowParam(mihirparam) +& MaxHoursInRowParam(mahirparam) +& NameParam(nameparam) +& InstitutionParam(institutionparam) +& BirthdayParam(birthdayparam) => {
+    case request@GET -> Root / "pdf" / filename ~ pdf :? MonthParam(monthparam) +& YearParam(yearparam) +& HoursPerMonthParam(hpmparam) +& MinHoursInRowParam(mihirparam) +& MaxHoursInRowParam(mahirparam) +& NameParam(nameparam) +& InstitutionParam(institutionparam) +& BirthdayParam(birthdayparam) => {
       val defaultConfig = Arbeitszeit.Config()
       val config = Arbeitszeit.Config(month = monthparam.getOrElse(defaultConfig.month),
         year = yearparam.getOrElse(defaultConfig.year),
@@ -62,7 +64,7 @@ object Main extends IOApp {
         birthday = birthdayparam.getOrElse(defaultConfig.birthday))
 
       val filename = f"${config.year}-${config.month}%02d_${config.name.replace(" ", "_")}.pdf"
-      Arbeitszeit.run(httpClient, config)
+      Arbeitszeit.genPDF(httpClient, config)
       val file = new File(filename)
       file.deleteOnExit() // delete file when jvm exits
       Future {

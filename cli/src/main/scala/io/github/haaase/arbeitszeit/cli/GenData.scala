@@ -1,4 +1,4 @@
-package io.github.haaase.arbeitszeitweb
+package io.github.haaase.arbeitszeit.cli
 
 import java.time._
 import java.time.format.DateTimeFormatter

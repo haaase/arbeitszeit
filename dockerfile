@@ -1,6 +1,6 @@
 FROM openjdk:14-slim-buster
 
-COPY target/scala-2.12/arbeitszeit-web-assembly-0.2.0.jar /usr/src/myapp/app.jar
+COPY web/target/scala-2.12/arbeitszeit-web-assembly-0.3.0.jar /usr/src/myapp/app.jar
 COPY form.pdf /usr/src/myapp/form.pdf
 WORKDIR /usr/src/myapp
 

@@ -1,0 +1,5 @@
+*.pdf
+format_amm.fish
+scalariform.jar
+.idea
+target
