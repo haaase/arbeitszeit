@@ -6,7 +6,7 @@ val ScalatagsVersion = "0.6.8"
 val ScoptVersion = "4.0.0-RC2"
 val ScalaVersion = "2.12.10"
 
-val ArbeitszeitVersion = "0.3.0"
+val ArbeitszeitVersion = "1.0.0"
 
 lazy val cli = (project in file("cli"))
   .settings(
