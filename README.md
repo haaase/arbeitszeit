@@ -6,7 +6,7 @@ Arbeitszeit is now a CLI-Application as well as a Webservice! The old Ammonite f
 
 ## CLI Usage
 
-To run the CLI Application, grab the latest cli jar from the [releases](releases/) folder. This is a fat jar that you can run by doing:
+To run the CLI Application, grab the latest cli jar from the [releases](https://github.com/haaase/arbeitszeit/releases) page. This is a fat jar that you can run by doing:
 
 ```
 java -jar arbeitszeit-cli-X.X.X.jar --form arbeitszeit2019.pdf --name "Kim Mustermann" --birthday "01.01.1989" --institution "Evil Corp." --month 1 --year 2000 --hours 60
@@ -14,7 +14,7 @@ java -jar arbeitszeit-cli-X.X.X.jar --form arbeitszeit2019.pdf --name "Kim Muste
 
 ## Webservice Usage
 
-To run the webservice, get the latest web jar from the [releases](releases/). You can start the server by placing the form as `form.pdf` in the same directory and running:
+To run the webservice, get the latest web jar from the [releases](https://github.com/haaase/arbeitszeit/releases) page. You can start the server by placing the form as `form.pdf` in the same directory and running:
 
 ```
 java -jar arbeitszeit-web.X.X.X.jar
