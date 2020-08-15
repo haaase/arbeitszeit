@@ -25,5 +25,5 @@ An example call looks like: [http://localhost:8080/pdf/bla.pdf?name=Kim%20Muster
 It accepts all of the scripts' options as GET parameters and serves a downloadable PDF file.
 
 ## Try it!
-You can try the webservice at online at [https://arbeitszeit.herokuapp.com/pdf/output.pdf?name=Kim%20Mustermann&month=2&year=2012&birthday=01.01.1989](https://arbeitszeit.herokuapp.com/pdf/output.pdf?name=Kim%20Mustermann&month=2&year=2012&birthday=01.01.1989)!
+You can try the webservice online at [https://arbeitszeit.herokuapp.com/pdf/output.pdf?name=Kim%20Mustermann&month=2&year=2012&birthday=01.01.1989](https://arbeitszeit.herokuapp.com/pdf/output.pdf?name=Kim%20Mustermann&month=2&year=2012&birthday=01.01.1989)!
 
